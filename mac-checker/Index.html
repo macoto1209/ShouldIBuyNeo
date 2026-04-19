@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacBook 需求診斷分析工具</title>
+    <style>
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: #f5f5f7; padding: 20px; color: #1d1d1f; }
+        .main-container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { font-size: 20px; text-align: center; margin-bottom: 30px; border-bottom: 1px solid #d2d2d7; padding-bottom: 20px; }
+        .group { margin-bottom: 25px; padding: 15px; background: #fafafa; border-radius: 8px; }
+        .group-title { font-weight: bold; margin-bottom: 15px; display: block; font-size: 15px; color: #555; }
+        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+        .checkbox-item { font-size: 14px; display: flex; align-items: center; }
+        .checkbox-item input { margin-right: 8px; }
+        button { width: 100%; padding: 16px; background: #000; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #333; }
+        .result-area { margin-top: 30px; }
+        .mac-card { padding: 20px; border: 1px solid #d2d2d7; border-radius: 10px; margin-bottom: 20px; transition: 0.3s; }
+        .incompatible { border-left: 6px solid #ff3b30; background-color: #fff9f9; }
+        .compatible { border-left: 6px solid #34c759; background-color: #f9fff9; }
+        .header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; font-size: 16px; }
+        .msg-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+        .msg-item { margin-bottom: 5px; line-height: 1.4; }
+        .error { color: #d00000; font-weight: bold; }
+        .warning { color: #8a6d3b; font-weight: 500; }
+        .suggestion { color: #0066cc; font-weight: 500; border-top: 1px dashed #ccc; margin-top: 10px; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <h1>MacBook 專業需求硬體診斷</h1>
+
+    <div class="group">
+        <span class="group-title">一、 日常工作任務性質</span>
+        <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" class="task" value="web"> 網頁瀏覽 / 影片串流</label>
+            <label class="checkbox-item"><input type="checkbox" class="task" value="doc"> 文書處理 / Office</label>
+            <label class="checkbox-item"><input type="checkbox" class="task" value="print"> 平面設計 (印刷/排版)</label>
+            <label class="checkbox-item"><input type="checkbox" class="task" value="digital"> 數位媒介 (UI/UX/網頁)</label>
+            <label class="checkbox-item"><input type="checkbox" class="task" value="video"> 影片剪輯 / 後製調色</label>
+            <label class="checkbox-item"><input type="checkbox" class="task" value="render"> 3D 渲染 / 空間建模</label>
+        </div>
+    </div>
+
+    <div class="group">
+        <span class="group-title">二、 專業軟體應用</span>
+        <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" class="sw" value="ps_ai"> Adobe Photoshop / Illustrator</label>
+            <label class="checkbox-item"><input type="checkbox" class="sw" value="pr_ae"> Adobe Premiere / After Effects</label>
+            <label class="checkbox-item"><input type="checkbox" class="sw" value="cad_su"> AutoCAD / SketchUp</label>
+            <label class="checkbox-item"><input type="checkbox" class="sw" value="blender"> Blender / 3ds Max</label>
+            <label class="checkbox-item"><input type="checkbox" class="sw" value="canva"> Canva / 輕量線上工具</label>
+            <label class="checkbox-item"><input type="checkbox" class="sw" value="dev"> 程式開發 / Docker</label>
+        </div>
+    </div>
+
+    <button onclick="diagnose()">執行硬體規格診斷</button>
+
+    <div id="result" class="result-area"></div>
+</div>
+
+<script>
+function diagnose() {
+    var selectedTasks = Array.from(document.querySelectorAll('.task:checked')).map(i => i.value);
+    var selectedSWs = Array.from(document.querySelectorAll('.sw:checked')).map(i => i.value);
+
+    if (selectedTasks.length === 0 && selectedSWs.length === 0) {
+        alert("請至少勾選一項需求。");
+        return;
+    }
+
+    var macs = [
+        { name: "MacBook Neo (A18 Pro)", ram: 8, screen: "sRGB", fan: false, usb: 2, price: "19,900" },
+        { name: "MacBook Air M5", ram: 16, screen: "P3", fan: false, usb: 4, price: "35,900" },
+        { name: "MacBook Pro 14 (M5 Pro)", ram: 24, screen: "P3/HDR", fan: true, usb: 4, price: "59,900" }
+    ];
+
+    var html = "";
+
+    macs.forEach(m => {
+        var errors = [];
+        var warns = [];
+        var suggestions = [];
+
+        // 1. 記憶體檢核
+        if ((selectedTasks.includes("print") || selectedSWs.includes("ps_ai")) && m.ram < 16) {
+            warns.push("效能警示：8GB 記憶體在處理高解析度影像或多圖層檔案時將面臨分頁交換，降低作業流暢度。");
+        }
+        if ((selectedTasks.includes("video") || selectedTasks.includes("render") || selectedSWs.includes("dev")) && m.ram < 16) {
+            errors.push("硬體限制：影音剪輯、3D 渲染或開發環境建議至少具備 16GB 以上統一記憶體。");
+        }
+
+        // 2. 色域與顯示檢核
+        if (selectedTasks.includes("print") && m.screen === "sRGB") {
+            warns.push("色彩管理：sRGB 螢幕可勝任平面印刷設計，請務必透過 Adobe 引擎進行『軟打樣』以模擬 CMYK 印刷色域。");
+        }
+        if ((selectedTasks.includes("digital") || selectedTasks.includes("video")) && m.screen === "sRGB") {
+            warns.push("規格限制：本機型不支援 Display P3 廣色域，對於以行動裝置為主的數位媒介或影片調色，色彩覆蓋不足。");
+        }
+
+        // 3. 散熱與持續負載
+        if ((selectedTasks.includes("render") || selectedSWs.includes("blender") || selectedSWs.includes("cad_su")) && !m.fan) {
+            warns.push("散熱警示：無風扇設計不適合長時間高負載渲染任務，熱降頻將導致運算時間大幅延長。");
+        }
+
+        // 4. 傳輸速度 (Neo 特有)
+        if (selectedTasks.includes("video") && m.usb < 4) {
+            warns.push("I/O 限制：配備 USB 2.0 介面，外接素材硬碟之傳輸速率將成為作業瓶頸。");
+        }
+
+        // 5. 跨平台建議 (3D 專屬)
+        if (selectedTasks.includes("render") || selectedSWs.includes("blender")) {
+            suggestions.push("跨平台建議：3D 渲染極度依賴 GPU 算力。若為重度需求，強烈建議選購搭載 NVIDIA RTX 系列顯卡之 Windows 系統以獲得 CUDA/OptiX 硬體加速。");
+        }
+
+        var isCompatible = errors.length === 0;
+        html += '<div class="mac-card ' + (isCompatible ? 'compatible' : 'incompatible') + '">';
+        html += '<div class="header"><span>' + m.name + '</span><span>NT$ ' + m.price + '</span></div>';
+        
+        html += '<ul class="msg-list">';
+        errors.forEach(e => html += '<li class="msg-item error">' + e + '</li>');
+        warns.forEach(w => html += '<li class="msg-item warning">' + w + '</li>');
+        suggestions.forEach(s => html += '<li class="msg-item suggestion">' + s + '</li>');
+        if (isCompatible && warns.length === 0) {
+            html += '<li class="msg-item" style="color:#2d5a27">硬體配置符合選取之軟體與任務需求。</li>';
+        }
+        html += '</ul></div>';
+    });
+
+    document.getElementById('result').innerHTML = html;
+}
+</script>
+
+</body>
+</html>
